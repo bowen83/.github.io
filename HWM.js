@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.2/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.2/dist/wheels/panel-0.14.2-py3-none-any.whl', 'pyodide-http==0.1.0', 'pandas', 'param']
+  const env_spec = ['https://cdn.holoviz.org/panel/0.14.2/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.2/dist/wheels/panel-0.14.2-py3-none-any.whl', 'pyodide-http==0.1.0', 'pandas', 'param', 'requests']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -51,12 +51,20 @@ import pandas as pd
 
 import bokeh
 import panel as pn
-
+import requests
+import io
 bokeh.plotting.curdoc().theme='dark_minimal'
 import param
 
-df=pd.read_csv('resampled_blocked.csv', parse_dates=True)
-print('reading csv file')
+
+url = "https://github.com/bowen83/.github.io/raw/edd7e889e75c1c5d612e98f8795eb3c95b6af6de/resampled_blocked.csv" # Make sure the url is the raw version of the file on GitHub
+download = requests.get(url).content
+
+# Reading the downloaded content and turning it into a pandas dataframe
+
+df = pd.read_csv(io.StringIO(download.decode('utf-8')))
+
+#df=pd.read_csv(, parse_dates=True)
 
 #df=df.sort_values(by=['Sensor_ID','TimeStamp'])
 df.TimeStamp=pd.to_datetime(df.TimeStamp)
@@ -66,7 +74,6 @@ Sensor=df.Sensor_ID.unique().tolist()
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save, hover"
 
-print('creating dashboard')
 
 class BlockedDashboard(param.Parameterized):
     
